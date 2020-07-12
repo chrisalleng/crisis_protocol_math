@@ -30,7 +30,7 @@ block form
 block results
     .grid-x.grid-margin-x.small-up-1.medium-up-1.large-up-1
         - import simulation_results;
-        - SimulationResult[] total_hits_pdf;
+        - SimulationResult[] total_damage_pdf;
         - SimulationResult total_sum;
         - string[] exp_token_labels = [];
         - double[] exp_attack_tokens = [];

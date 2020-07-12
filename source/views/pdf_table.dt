@@ -7,9 +7,8 @@ thead
 tbody
     - import std.format;
     - double hit_inv_cdf = 1.0;
-    - foreach(i, total; total_hits_pdf)
-        - double total_hits = total.hits + total.crits;
-        - double crit_fraction = total_hits > 0.0 ? total.crits / total_hits : 0.0;
+    - foreach(i, total; total_damage_pdf)
+        - double crit_fraction = total.damage > 0.0 ? total.wilds / total.damage : 0.0;
         tr
             td= i
             td #{format("%.9f", total.probability)}

@@ -3,21 +3,21 @@ import std.math;
 // TODO: Can generalize this but okay for now
 // Do it in floating point since for our purposes we always end up converting immediately anyways
 private static immutable double[] k_factorials_table = [
-    1,                  // 0!
-    1,                  // 1!
-    2,                  // 2!
-    6,                  // 3!
-    24,                 // 4!
-    120,                // 5!
-    720,                // 6!
-    5040,               // 7!
-    40320,              // 8!
-    362880,             // 9!
-    3628800,            // 10!
-    39916800,			// 11!
-    479001600,			// 12!
-    6227020800,			// 13!
-    87178291200,		// 14!
+    1, // 0!
+    1, // 1!
+    2, // 2!
+    6, // 3!
+    24, // 4!
+    120, // 5!
+    720, // 6!
+    5040, // 7!
+    40320, // 8!
+    362880, // 9!
+    3628800, // 10!
+    39916800, // 11!
+    479001600, // 12!
+    6227020800, // 13!
+    87178291200, // 14!
 ];
 
 private pure double factorial(int n)
@@ -36,7 +36,7 @@ private pure double[count] compute_power_table(ulong count)(ulong num, ulong den
     ulong d = denom;
     foreach (i; 1 .. table.length)
     {
-        table[i] = cast(double)n / cast(double)d;
+        table[i] = cast(double) n / cast(double) d;
         n *= num;
         d *= denom;
     }
@@ -56,34 +56,22 @@ private pure double fractional_power(ulong num, ulong denom)(int power)
 // NOTE: Can optimize power functions into a table fairly easily as well but performance
 // improvement is negligable and readability is greater this way.
 
-public pure double compute_attack_roll_probability(int blank, int focus, int hit, int crit)
+public pure double compute_roll_probability(int fail, int blank, int block,
+        int hit, int wild, int crit)
 {
+    // P(fail)  = 1/8
     // P(blank) = 2/8
-    // P(focus) = 2/8
-    // P(hit)   = 3/8
+    // P(block) = 1/8
+    // P(hit)   = 2/8
+    // P(wild)  = 1/8
     // P(crit)  = 1/8
-    double nf = factorial(blank + focus + hit + crit);
-    double xf = (factorial(blank) * factorial(focus) * factorial(hit) * factorial(crit));
+    double nf = factorial(fail + blank + block + hit + wild + crit);
+    double xf = (factorial(fail) * factorial(blank) * factorial(block) * factorial(
+            hit) * factorial(wild) * factorial(crit));
 
-    //double p = pow(0.25, blank + focus) * pow(0.375, hit) * pow(0.125, crit);
-    double p = fractional_power!(1, 8)(crit) * fractional_power!(2, 8)(blank + focus) * fractional_power!(3, 8)(hit);
-
-    double roll_probability = (nf / xf) * p;
-
-    assert(roll_probability >= 0.0 && roll_probability <= 1.0);
-    return roll_probability;
-}
-
-public pure double compute_defense_roll_probability(int blank, int focus, int evade)
-{
-    // P(blank) = 3/8
-    // P(focus) = 2/8
-    // P(evade) = 3/8
-    double nf = factorial(blank + focus + evade);
-    double xf = (factorial(blank) * factorial(focus) * factorial(evade));
-
-    //double p = pow(0.375, blank + evade) * pow(0.25, focus);
-    double p = fractional_power!(2, 8)(focus) * fractional_power!(3, 8)(blank + evade);
+    double p = fractional_power!(1, 8)(crit) * fractional_power!(1,
+            8)(wild) * fractional_power!(2, 8)(hit) * fractional_power!(1,
+            8)(block) * fractional_power!(1, 8)(blank) * fractional_power!(1, 8)(fail);
 
     double roll_probability = (nf / xf) * p;
 

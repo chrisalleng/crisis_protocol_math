@@ -2,9 +2,9 @@ public struct TokenResults
 {
     public struct Field
     {
-        string field;       // Compile-time field name in TokenState. i.e. "attack_tokens.field" should be valid D code
-        string name;        // UI name to use for the field
-    };    
+        string field; // Compile-time field name in TokenState. i.e. "attack_tokens.field" should be valid D code
+        string name; // UI name to use for the field
+    };
 
     public void initialize(const(Field)[] fields, T)(double probability, T state)
     {
@@ -13,7 +13,7 @@ public struct TokenResults
         m_fields = fields;
         m_initialized = true;
         m_values[] = 0.0;
-        static foreach(i, field; fields)
+        static foreach (i, field; fields)
         {
             mixin("m_values[i] = probability * cast(double)state." ~ field.field ~ ";");
         }
@@ -42,28 +42,38 @@ public struct TokenResults
     private bool m_initialized = false;
 
     // Could do an iteration range or something but this is good enough for now
-    public size_t field_count() const { return m_fields.length; }
-    public string field_name(size_t i) const { return m_fields[i].name; }
-    public double result(size_t i) const { return m_values[i]; }
-};
+    public size_t field_count() const
+    {
+        return m_fields.length;
+    }
 
+    public string field_name(size_t i) const
+    {
+        return m_fields[i].name;
+    }
+
+    public double result(size_t i) const
+    {
+        return m_values[i];
+    }
+};
 
 public struct SimulationResult
 {
     double probability = 0.0f;
-    double hits = 0;
-    double crits = 0;
+    double damage = 0;
+    double wilds = 0;
     TokenResults attack_tokens;
     TokenResults defense_tokens;
 };
 
 public SimulationResult accumulate_result(SimulationResult a, SimulationResult b)
 {
-    a.probability       += b.probability;
-    a.hits              += b.hits;
-    a.crits             += b.crits;
-    a.attack_tokens     += b.attack_tokens;
-    a.defense_tokens    += b.defense_tokens;
+    a.probability += b.probability;
+    a.damage += b.damage;
+    a.wilds += b.wilds;
+    a.attack_tokens += b.attack_tokens;
+    a.defense_tokens += b.defense_tokens;
     return a;
 }
 
@@ -71,7 +81,7 @@ public SimulationResult accumulate_result(SimulationResult a, SimulationResult b
 // TODO: Make into a class with handy utilities
 public struct SimulationResults
 {
-    SimulationResult[] total_hits_pdf;
+    SimulationResult[] total_damage_pdf;
     SimulationResult total_sum;
-    double at_least_one_crit_probability = 0.0;
+    double at_least_one_wild_probability = 0.0;
 };
