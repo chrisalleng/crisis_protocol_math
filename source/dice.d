@@ -47,8 +47,6 @@ public struct DiceState
     void finalize()
     {
         final_results[] += results[];
-        final_results[DieResult.Blank] = 0;
-        final_results[DieResult.Fail] = 0;
 
         results[] = 0;
     }
@@ -149,7 +147,7 @@ public void roll_dice(int dice_count, void delegate(int, int, int, int, int, int
                         assert(fail >= 0);
 
                         double roll_probability = compute_roll_probability(fail,
-                                blank, wild, block, hit, crit);
+                                blank, block, hit, wild, crit);
                         dg(fail, blank, block, hit, wild, crit, roll_probability);
                     }
 

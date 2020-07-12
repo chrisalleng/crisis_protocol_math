@@ -233,24 +233,42 @@ public struct SimulationState
 // TODO update
 // TODO pass dice, use for attack/defense
 // delegate params are next_state, probability (also already baked into next_state probability)
-public void roll_dice(SimulationState prev_state, DiceState rolled_dice,
-        int roll_count, void delegate(SimulationState, double) dg)
+public void roll_attack_dice(SimulationState prev_state, int roll_count,
+        void delegate(SimulationState, double) dg)
 {
     dice.roll_dice(roll_count, (int fail, int blank, int block, int hit, int wild,
             int crit, double probability) {
         SimulationState next_state = prev_state;
 
-        rolled_dice.results[DieResult.Crit] += crit;
-        rolled_dice.results[DieResult.Wild] += wild;
-        rolled_dice.results[DieResult.Hit] += hit;
-        rolled_dice.results[DieResult.Block] += block;
-        rolled_dice.results[DieResult.Blank] += blank;
-        rolled_dice.results[DieResult.Fail] += fail;
+        next_state.attack_dice.results[DieResult.Crit] += crit;
+        next_state.attack_dice.results[DieResult.Wild] += wild;
+        next_state.attack_dice.results[DieResult.Hit] += hit;
+        next_state.attack_dice.results[DieResult.Block] += block;
+        next_state.attack_dice.results[DieResult.Blank] += blank;
+        next_state.attack_dice.results[DieResult.Fail] += fail;
 
         next_state.probability *= probability;
         dg(next_state, probability);
     });
+}
 
+public void roll_defense_dice(SimulationState prev_state, int roll_count,
+        void delegate(SimulationState, double) dg)
+{
+    dice.roll_dice(roll_count, (int fail, int blank, int block, int hit, int wild,
+            int crit, double probability) {
+        SimulationState next_state = prev_state;
+
+        next_state.defense_dice.results[DieResult.Crit] += crit;
+        next_state.defense_dice.results[DieResult.Wild] += wild;
+        next_state.defense_dice.results[DieResult.Hit] += hit;
+        next_state.defense_dice.results[DieResult.Block] += block;
+        next_state.defense_dice.results[DieResult.Blank] += blank;
+        next_state.defense_dice.results[DieResult.Fail] += fail;
+
+        next_state.probability *= probability;
+        dg(next_state, probability);
+    });
 }
 
 // general state fork based on StateFork struct
@@ -263,7 +281,7 @@ public void fork_attack_state(SimulationState prev_state, const StateFork fork,
     switch (fork.type)
     {
     case StateForkType.Roll:
-        roll_dice(prev_state, prev_state.attack_dice, fork.roll_count, dg);
+        roll_attack_dice(prev_state, fork.roll_count, dg);
         break;
     default:
         assert(false);
@@ -277,7 +295,7 @@ public void fork_defense_state(SimulationState prev_state, const StateFork fork,
     switch (fork.type)
     {
     case StateForkType.Roll:
-        roll_dice(prev_state, prev_state.defense_dice, fork.roll_count, dg);
+        roll_defense_dice(prev_state, fork.roll_count, dg);
         break;
     default:
         assert(false);
@@ -358,16 +376,14 @@ public class SimulationStateSet
     // Handy utilities for invoking the initial roll. Can easily be done with fork_*_state as well for more control.
     public void roll_attack_dice(SimulationState prev_state, int roll_count)
     {
-        .roll_dice(prev_state, prev_state.attack_dice, roll_count,
-                (SimulationState next_state, double probability) {
+        .roll_attack_dice(prev_state, roll_count, (SimulationState next_state, double probability) {
             push_back(next_state);
         });
     }
 
     public void roll_defense_dice(SimulationState prev_state, int roll_count)
     {
-        .roll_dice(prev_state, prev_state.defense_dice, roll_count,
-                (SimulationState next_state, double probability) {
+        .roll_defense_dice(prev_state, roll_count, (SimulationState next_state, double probability) {
             push_back(next_state);
         });
     }

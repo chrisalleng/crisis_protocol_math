@@ -5,11 +5,12 @@ import modify_defense_dice : modify_defense_dice_root;
 import simulation_results;
 import dice;
 import math;
-import log;
 
 import std.algorithm;
 import std.stdio;
 import std.datetime;
+import std.array;
+import std.conv;
 
 import vibe.core.core;
 
@@ -25,10 +26,10 @@ public SimulationState neutralize_results(const(SimulationSetup) setup, Simulati
     ubyte[DieResult.Num] defense_results = state.defense_dice.final_results;
 
     // Compare results
-    int total_hits = attack_results[DieResult.Crit]
-        + attack_results[DieResult.Wild] + attack_results[DieResult.Hit];
-    int total_evades = defense_results[DieResult.Crit]
-        + attack_results[DieResult.Wild] + attack_results[DieResult.Block];
+    int total_hits = state.attack_dice.count(DieResult.Crit) + state.attack_dice.count(
+            DieResult.Wild) + state.attack_dice.count(DieResult.Hit);
+    int total_evades = state.defense_dice.count(DieResult.Crit) + state.defense_dice.count(
+            DieResult.Wild) + state.defense_dice.count(DieResult.Block);
 
     // Cancel pairs of hits/crits and evades
 
@@ -192,15 +193,11 @@ public SimulationStateSet simulate_attack(const(SimulationSetup) setup, Simulati
     // would make it a lot more wordy - and potentially less efficient - to pass it around everywhere.
 
     // Sort our states by tokens so that any matching sets are back to back in the list
-    states.sort_by_tokens();
-
-    // There's ways to do this in place but it's simpler for now to just do it to a new state set
+    states.sort_by_tokens(); // There's ways to do this in place but it's simpler for now to just do it to a new state set
     // This function is only called once per attack, so it's not the end of the world
     SimulationStateSet new_states = new SimulationStateSet();
-
     SimulationStateSet second_attack_states;
     SimulationState second_attack_initial_state;
-
     foreach (initial_state; states)
     {
         // If our tokens are the same as the previous simulation (we sorted), we don't have to simulate again
@@ -209,17 +206,13 @@ public SimulationStateSet simulate_attack(const(SimulationSetup) setup, Simulati
                 || !second_attack_states)
         {
             // This can be expensive for lots of states so worth allowing other things to run occasionally
-            vibe.core.core.yield();
-
-            //auto sw = StopWatch(AutoStart.yes);
+            vibe.core.core.yield(); //auto sw = StopWatch(AutoStart.yes);
 
             // New token state set, so run a new simulation
             second_attack_initial_state = initial_state;
             second_attack_states = simulate_single_attack(setup,
                     second_attack_initial_state.attack_tokens,
-                    second_attack_initial_state.defense_tokens);
-
-            //writefln("Second attack in %s msec", sw.peek().msecs());
+                    second_attack_initial_state.defense_tokens); //writefln("Second attack in %s msec", sw.peek().msecs());
         }
 
         // Compose all of the results from the second attack set with this one

@@ -71,7 +71,7 @@ public pure double compute_roll_probability(int fail, int blank, int block,
 
     double p = fractional_power!(1, 8)(crit) * fractional_power!(1,
             8)(wild) * fractional_power!(2, 8)(hit) * fractional_power!(1,
-            8)(block) * fractional_power!(1, 8)(blank) * fractional_power!(1, 8)(fail);
+            8)(block) * fractional_power!(2, 8)(blank) * fractional_power!(1, 8)(fail);
 
     double roll_probability = (nf / xf) * p;
 
