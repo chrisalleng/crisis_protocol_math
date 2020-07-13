@@ -10,94 +10,6 @@ import std.algorithm;
 import std.stdio;
 import std.conv;
 
-public enum GreenToken
-{
-    Focus = 0,
-    Calculate,
-    Evade,
-    Reinforce
-};
-
-// Real tokens/charges/etc. State that needs to be tracked between attacks.
-public struct TokenState
-{
-    mixin(bitfields!(uint, "lock", 2, uint, "force", 4, // Green tokens               
-            uint, "focus", 4, uint,
-            "calculate", 4, uint, "evade", 8, // Laetin...
-            uint, "reinforce", 2, // Red tokens                 
-            uint,
-            "stress", 4, bool, "lone_wolf", 1, // Recurrent
-            bool, "stealth_device", 1, // NOTE: Instead of tracking a single field ion token count, we basically track whether
-            // the ship has 1, 2, or 3 ion tokens via 3 bits. The advantage of this is that the token results
-            // will automatically tell us the chance of ending up with each of the 3 numbers of tokens, which
-            // is really what we want more than the average number, as the 3 counts correspond to the number of
-            // required tokens to ionize a small/medium/large base ship respectively.
-            // NOTE: if ion_2 is set, ion_1 must be set. Similarly if ion_3 is set ion_2 and ion_1 must both be set.
-            // Generally use "add_ion_tokens" helper to manipulate these.
-            bool,
-            "ion_1", 1, bool, "ion_2", 1, bool, "ion_3", 1, bool, "iden", 1,
-            uint, "iden_total_damage", 2, // tracking for Iden (persistent)
-
-            bool, "l337", 1, bool, "elusive", 1,
-
-            // TODO: want to move this to a temp state, but needs to stick around until end of attack
-            bool, "spent_calculate", 1, // tracking for Leebo
-            bool, "iden_used", 1, // tracking so we can treat the attack as "hitting"
-            bool,
-            "predictive_shot_used", 1, // tracking for Predictive Shot use at start of attack
-
-            uint, "", 23,));
-
-    // Utilities
-    void add_ion_tokens(int count)
-    {
-        while (count > 0)
-        {
-            if (ion_2)
-                ion_3 = true;
-            else if (ion_1)
-                ion_2 = true;
-            else
-                ion_1 = true;
-            --count;
-        }
-    }
-
-    uint count(GreenToken token) const
-    {
-        switch (token)
-        {
-        case GreenToken.Focus:
-            return focus;
-        case GreenToken.Calculate:
-            return calculate;
-        case GreenToken.Evade:
-            return evade;
-        case GreenToken.Reinforce:
-            return reinforce;
-        default:
-            assert(false);
-        }
-    }
-
-    uint green_token_count() const
-    {
-        return focus + calculate + evade + reinforce;
-    }
-}
-//pragma(msg, "sizeof(TokenState) = " ~ to!string(TokenState.sizeof));
-
-// For TokenResults
-// Order here is the order they will be shown in the chart and table
-public static immutable TokenResults.Field[] k_token_results2_fields = [
-    {"lock", "Lock"}, {"force", "Force"}, {"focus", "Focus"},
-    {"calculate", "Calculate"}, {"evade", "Evade"}, {"reinforce", "Reinforce"},
-    {"stress", "Stress"}, {"elusive", "Elusive"}, {"iden", "Iden"},
-    {"l337", "L3-37"}, {"lone_wolf", "Lone Wolf"},
-    {"stealth_device", "Stealth Device"}, {"ion_1", "Ionized (1)"},
-    {"ion_2", "Ionized (2)"}, {"ion_3", "Ionized (3)"},
-];
-
 // These fields are for tracking "once per opportunity" or other stuff that gets
 // reset after modding completes and does not carry on to the next phase/attack.
 // NOTE: In practice these fields get reset for the attacker after attack dice modding is done, and similar for defender.
@@ -196,10 +108,8 @@ public struct SimulationState
         // TODO: Can move the "_temp" stuff out the key to make comparison/sorting slightly faster,
         // but need to ensure that they are reset at exactly the right places.
         DiceState attack_dice;
-        TokenState attack_tokens;
         AttackTempState attack_temp;
         DiceState defense_dice;
-        TokenState defense_tokens;
         DefenseTempState defense_temp;
 
         // Final results
@@ -310,31 +220,6 @@ public class SimulationStateSet
         m_states.reserve(50);
     }
 
-    // Replaces the attack tokens on *all* current states with the given ones
-    // Generally this is done in preparation for simulating another attack *from a different attacker*
-    public void replace_attack_tokens(TokenState attack_tokens)
-    {
-        foreach (ref state; m_states)
-            state.attack_tokens = attack_tokens;
-        compress();
-    }
-
-    // Replaces the defense tokens on *all* current states with the given ones
-    public void replace_defense_tokens(TokenState defense_tokens)
-    {
-        foreach (ref state; m_states)
-            state.defense_tokens = defense_tokens;
-        compress();
-    }
-
-    // Re-sorts the array by tokens, ensuring that any states with matching tokens are sequential
-    public void sort_by_tokens()
-    {
-        multiSort!((a, b) => memcmp(&a.attack_tokens, &b.attack_tokens,
-                TokenState.sizeof) < 0, (a, b) => memcmp(&a.defense_tokens,
-                &b.defense_tokens, TokenState.sizeof) < 0, SwapStrategy.unstable)(m_states[]);
-    }
-
     // Compresses and simplifies the state set by combining any elements that match and
     // adding their probabilities together. This is very important for performance and states
     // should be simplified as much as possible before calling this to allow as many state collapses
@@ -343,8 +228,6 @@ public class SimulationStateSet
     {
         if (m_states.empty())
             return;
-
-        // TODO: Some debug/profiling
 
         // First sort so that any matching keys are back to back
         sort!((a, b) => memcmp(&a.key, &b.key, a.key.sizeof) < 0)(m_states[]);
@@ -420,10 +303,6 @@ public class SimulationStateSet
             result.probability = state.probability;
             result.damage = state.probability * cast(double) state.final_damage;
             result.wilds = state.probability * cast(double) state.final_wilds;
-            result.attack_tokens.initialize!k_token_results2_fields(state.probability,
-                    state.attack_tokens);
-            result.defense_tokens.initialize!k_token_results2_fields(state.probability,
-                    state.defense_tokens);
 
             // Accumulate into the total results structure
             results.total_sum = accumulate_result(results.total_sum, result);

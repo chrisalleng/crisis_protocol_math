@@ -58,11 +58,11 @@ public StateFork modify_attack_dice(const(SimulationSetup) setup, ref Simulation
     if (state.attack_temp.finished_amad)
         return StateForkNone();
 
-    // Search from all our potential token spending and rerolling options to find the optimal one
+    // Search from all our potential rerolling options to find the optimal one
     SearchDelegate[64] search_options;
     size_t search_options_count = 0;
 
-    // "Free" rerolls that don't involve token spending. Check these before we finish up the attack as they might avoid token spending.
+    // "Free" rerolls
     const int max_dice_to_reroll = state.attack_dice.results[DieResult.Fail]
         + state.attack_dice.results[DieResult.Blank] + state.attack_dice.results[DieResult.Block];
 
@@ -198,8 +198,7 @@ private double search_expected_damage(const(SimulationSetup) setup,
     return expected_damage;
 }
 
-// NOTE: Will prefer options earlier in the list if equivalent, so put stuff that spends more
-// or more valuable tokens later in the options list.
+// NOTE: Will prefer options earlier in the list if equivalent
 // NOTE: Search delegates *must* evolve the state in a way that will eventually terminate,
 // i.e. spending a finite token, rerolling dice and so on.
 // NOTE: If minimize_damage is set to true, will instead search for the minimal damage option

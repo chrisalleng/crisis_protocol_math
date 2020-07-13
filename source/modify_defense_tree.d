@@ -44,7 +44,7 @@ private void modify_defense_tree(const(SimulationSetup) setup,
 }
 
 public ModifyTreeNode[] compute_modify_defense_tree(const(SimulationSetup) setup,
-        DiceState attack_dice, TokenState defense_tokens, DiceState defense_dice)
+        DiceState attack_dice, DiceState defense_dice)
 {
     auto nodes = new ModifyTreeNode[1];
 
@@ -52,7 +52,6 @@ public ModifyTreeNode[] compute_modify_defense_tree(const(SimulationSetup) setup
     attack_dice.finalize();
     nodes[0].before.attack_dice = attack_dice;
 
-    nodes[0].before.defense_tokens = defense_tokens;
     nodes[0].before.defense_dice = defense_dice;
     nodes[0].before.probability = 1.0;
     modify_defense_tree(setup, nodes, 0);

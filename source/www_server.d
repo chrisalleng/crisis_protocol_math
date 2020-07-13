@@ -186,12 +186,9 @@ public class WWWServer
         {
             auto sw = StopWatch(AutoStart.yes);
 
-            TokenState defense_tokens = defense_form.to_defense_tokens2();
-
             // Set up the initial state
             auto simulation_states = new SimulationStateSet();
             SimulationState initial_state = SimulationState.init;
-            initial_state.defense_tokens = defense_tokens;
             initial_state.probability = 1.0;
             simulation_states.push_back(initial_state);
 
@@ -199,13 +196,6 @@ public class WWWServer
             {
                 if (attack_form[i].enabled)
                 {
-                    // Optionally don't replace attack tokens if selected
-                    if (!attack_form[i].previous_tokens_enabled)
-                    {
-                        TokenState attack_tokens = to_attack_tokens2(attack_form[i]);
-                        simulation_states.replace_attack_tokens(attack_tokens);
-                    }
-
                     // NOTE: Query string parameter human visible so 1-based
                     form_state_string ~= format("&a%d=%s", (i + 1),
                             serialize_form_to_url(attack_form[i]));
@@ -281,20 +271,14 @@ public class WWWServer
         {
             auto sw = StopWatch(AutoStart.yes);
 
-            TokenState defense_tokens = defense_form.to_defense_tokens2();
-
             // Set up the initial state
             auto simulation_states = new SimulationStateSet();
             SimulationState initial_state = SimulationState.init;
-            initial_state.defense_tokens = defense_tokens;
             initial_state.probability = 1.0;
             simulation_states.push_back(initial_state);
 
             foreach (i; 0 .. cast(int) attack_form.length)
             {
-                TokenState attack_tokens = to_attack_tokens2(attack_form[i]);
-                simulation_states.replace_attack_tokens(attack_tokens);
-
                 if (attack_form[i].enabled)
                 {
                     // NOTE: Query string parameter human visible so 1-based
@@ -383,34 +367,6 @@ public class WWWServer
                 + content.hit_pdf[i] + content.crit_pdf[i];
         }
 
-        // Tokens
-        string[16] token_labels;
-        double[16] attack_tokens;
-        double[16] defense_tokens;
-        size_t token_field_count = 0;
-
-        foreach (i; 0 .. results.total_sum.attack_tokens.field_count())
-        {
-            double attack = results.total_sum.attack_tokens.result(i);
-            double defense = results.total_sum.defense_tokens.result(i);
-            if (attack != 0.0 || defense != 0.0)
-            {
-                assert(token_field_count <= token_labels.length);
-                token_labels[token_field_count] = results.total_sum.attack_tokens.field_name(i);
-                attack_tokens[token_field_count] = attack;
-                defense_tokens[token_field_count] = defense;
-                ++token_field_count;
-            }
-        }
-
-        auto exp_token_labels = token_labels[0 .. token_field_count].dup;
-        auto exp_attack_tokens = attack_tokens[0 .. token_field_count].dup;
-        auto exp_defense_tokens = defense_tokens[0 .. token_field_count].dup;
-
-        content.exp_token_labels = exp_token_labels;
-        content.exp_attack_tokens = exp_attack_tokens;
-        content.exp_defense_tokens = exp_defense_tokens;
-
         // Render HTML for tables
         {
             SimulationResult[] total_damage_pdf = results.total_damage_pdf.dup;
@@ -421,13 +377,6 @@ public class WWWServer
             pdf_html.compileHTMLDietFile!("pdf_table.dt", total_damage_pdf);
             content.pdf_table_html = pdf_html.data;
         }
-        {
-            auto token_html = appender!string();
-            token_html.compileHTMLDietFile!("token_table.dt", exp_token_labels,
-                    exp_attack_tokens, exp_defense_tokens, attacker_index, defender_index);
-            content.token_table_html = token_html.data;
-        }
-
         return content;
     }
 

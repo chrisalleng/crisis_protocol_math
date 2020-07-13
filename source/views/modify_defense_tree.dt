@@ -17,49 +17,6 @@
     - output       ~= replicate("<i class=\"defense-die defense-die-rerolled die-blank\"></i>", dice.rerolled_results[DieResult.Blank] + dice.final_results[DieResult.Blank]);
 
     - return output;
-    
-- void output_token_spending(TokenState before, TokenState after, DefenseTempState before_temp, DefenseTempState after_temp)
-    - int calculate_consumed = before.calculate - after.calculate;
-    - int locks_consumed = before.lock - after.lock;
-
-    - if (after_temp.used_c3p0 != before_temp.used_c3p0)
-        | Before rolling, spend 1 calculate to use C-3P0 (guess 1)<br/>
-        - --calculate_consumed;
-            
-    - if (locks_consumed > 0 && after_temp.used_shara_bey_pilot != before_temp.used_shara_bey_pilot)
-        | Spend lock to add 1 <i class="die die-focus"></i> result using Shara Bey<br/>
-        - --locks_consumed;
-
-    - if (after.focus < before.focus)
-        | Spend #{before.focus - after.focus} focus<br/>
-    - if (calculate_consumed > 0)
-        | Spend #{calculate_consumed} calculate<br/>
-        - calculate_consumed = 0;
-    - if (after.force < before.force)
-        | Spend #{before.force - after.force} force<br/>
-    - if (after.evade < before.evade)
-        | Spend #{before.evade - after.evade} evade<br/>
-    - if (after.reinforce < before.reinforce)
-        | Spend #{before.reinforce - after.reinforce} reinforce<br/>
-    - if (after.iden != before.iden)
-        | Use Iden Versio to cancel all dice
-
-    - if (after_temp.used_scum_lando_crew != before_temp.used_scum_lando_crew)
-        | Use Lando Calrissian (Scum) crew<br/>
-    - if (after_temp.used_scum_lando_pilot != before_temp.used_scum_lando_pilot)
-        | Gain 1 stress to use Lando Calrissian (Scum) pilot<br/>
-    - if (after_temp.used_rebel_millennium_falcon != before_temp.used_rebel_millennium_falcon)
-        | Use Millennium Falcon (Rebel)<br/>
-    - if (after_temp.used_rebel_han_pilot != before_temp.used_rebel_han_pilot)
-        | Use Han Solo (Rebel) pilot to reroll all dice<br/>
-
-    - if (locks_consumed > 0)
-        | Spend lock<br/>
-        - --locks_consumed;
-    - if (after.lone_wolf != before.lone_wolf)
-        | Use Lone Wolf<br/>
-    - if (after.elusive != before.elusive)
-        | Use Elusive<br/>
             
 .grid-x.grid-margin-x.small-up-1.medium-up-1.large-up-1
     .cell

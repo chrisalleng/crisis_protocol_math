@@ -20,47 +20,6 @@
 
     - return output;
     
-- void output_token_spending(TokenState before, TokenState after, AttackTempState before_temp, AttackTempState after_temp)
-    - int locks_consumed = before.lock - after.lock;
-    - int focus_consumed = before.focus - after.focus;
-    
-    - if (locks_consumed > 0 && after_temp.used_shara_bey_pilot != before_temp.used_shara_bey_pilot)
-        | Spend lock to add 1 <i class="die die-focus"></i> result using Shara Bey<br/>
-        - --locks_consumed;
-
-    - if (focus_consumed > 0 && after_temp.used_advanced_optics != before_temp.used_advanced_optics)
-        | Spend focus to change 1 blank to <i class="die die-hit"></i> using Advanced Optics<br/>
-        - --focus_consumed;
-
-    - if (focus_consumed > 0)
-        | Spend #{focus_consumed} focus<br/>
-    - if (after.calculate < before.calculate)
-        | Spend #{before.calculate - after.calculate} calculate<br/>
-    - if (after.evade < before.evade)
-        | Spend #{before.evade - after.evade} evade<br/>
-    - if (after.reinforce < before.reinforce)
-        | Spend #{before.reinforce - after.reinforce} reinforce<br/>
-    - if (after.force < before.force)
-        | Spend #{before.force - after.force} force<br/>
-
-    - if (after_temp.used_advanced_targeting_computer != before_temp.used_advanced_targeting_computer)
-        | Use Advanced Targeting Computer to change 1 <i class="die die-hit"></i> result to a <i class="die die-crit"></i> result<br/>
-            
-    - if (after_temp.used_scum_lando_crew != before_temp.used_scum_lando_crew)
-        | Use Lando Calrissian (Scum) crew<br/>
-    - if (after_temp.used_scum_lando_pilot != before_temp.used_scum_lando_pilot)
-        | Gain 1 stress to use Lando Calrissian (Scum) pilot<br/>
-    - if (after_temp.used_rebel_han_pilot != before_temp.used_rebel_han_pilot)
-        | Use Han Solo (Rebel) pilot to reroll all dice<br/>
-
-    - if (locks_consumed > 0)
-        | Spend lock<br/>
-        - --locks_consumed;
-    - if (after_temp.cannot_spend_lock != before_temp.cannot_spend_lock)
-        | Use Fire Control System<br/>
-    - if (after.lone_wolf != before.lone_wolf)
-        | Use Lone Wolf<br/>
-            
 .grid-x.grid-margin-x.small-up-1.medium-up-1.large-up-1
     .cell
         - foreach (index, ref const node; nodes)

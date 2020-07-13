@@ -45,20 +45,15 @@ public SimulationState neutralize_results(const(SimulationSetup) setup, Simulati
         state.defense_dice.cancel_all();
 
         state.attack_temp.reset();
-        state.attack_tokens.spent_calculate = false;
-        assert(state.attack_tokens.iden_used == false);
 
         state.defense_temp.reset();
-        state.defense_tokens.spent_calculate = false;
-        state.defense_tokens.iden_used = false;
     }
 
     return state;
 }
 
 // Returns full set of states after result comparison (results put into state.final_hits, etc)
-private SimulationStateSet simulate_single_attack(const(SimulationSetup) setup,
-        TokenState attack_tokens, TokenState defense_tokens)
+private SimulationStateSet simulate_single_attack(const(SimulationSetup) setup)
 {
     auto states = new SimulationStateSet();
     auto finished_states = new SimulationStateSet();
@@ -66,8 +61,6 @@ private SimulationStateSet simulate_single_attack(const(SimulationSetup) setup,
     // Roll attack dice
     {
         SimulationState initial_state;
-        initial_state.attack_tokens = attack_tokens;
-        initial_state.defense_tokens = defense_tokens;
         initial_state.probability = 1.0;
 
         // If "roll all hits" is set just statically add that single option
@@ -192,8 +185,6 @@ public SimulationStateSet simulate_attack(const(SimulationSetup) setup, Simulati
     // now. We could technically split our state set into two parts to represent this more formally, but that
     // would make it a lot more wordy - and potentially less efficient - to pass it around everywhere.
 
-    // Sort our states by tokens so that any matching sets are back to back in the list
-    states.sort_by_tokens(); // There's ways to do this in place but it's simpler for now to just do it to a new state set
     // This function is only called once per attack, so it's not the end of the world
     SimulationStateSet new_states = new SimulationStateSet();
     SimulationStateSet second_attack_states;
@@ -201,18 +192,14 @@ public SimulationStateSet simulate_attack(const(SimulationSetup) setup, Simulati
     foreach (initial_state; states)
     {
         // If our tokens are the same as the previous simulation (we sorted), we don't have to simulate again
-        if (initial_state.attack_tokens != second_attack_initial_state.attack_tokens
-                || initial_state.defense_tokens != second_attack_initial_state.defense_tokens
-                || !second_attack_states)
+        if (!second_attack_states)
         {
             // This can be expensive for lots of states so worth allowing other things to run occasionally
             vibe.core.core.yield(); //auto sw = StopWatch(AutoStart.yes);
 
             // New token state set, so run a new simulation
             second_attack_initial_state = initial_state;
-            second_attack_states = simulate_single_attack(setup,
-                    second_attack_initial_state.attack_tokens,
-                    second_attack_initial_state.defense_tokens); //writefln("Second attack in %s msec", sw.peek().msecs());
+            second_attack_states = simulate_single_attack(setup); //writefln("Second attack in %s msec", sw.peek().msecs());
         }
 
         // Compose all of the results from the second attack set with this one

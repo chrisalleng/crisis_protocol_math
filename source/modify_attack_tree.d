@@ -48,10 +48,9 @@ private void modify_attack_tree(const(SimulationSetup) setup,
 }
 
 public ModifyTreeNode[] compute_modify_attack_tree(const(SimulationSetup) setup,
-        TokenState attack_tokens, DiceState attack_dice)
+        DiceState attack_dice)
 {
     auto nodes = new ModifyTreeNode[1];
-    nodes[0].before.attack_tokens = attack_tokens;
     nodes[0].before.attack_dice = attack_dice;
     nodes[0].before.probability = 1.0;
     modify_attack_tree(setup, nodes, 0);
